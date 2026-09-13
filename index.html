@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0b111c">
+  <meta name="description" content="駅から自宅まで、終電の影から逃げ切る夜道サバイバルゲーム。">
+  <title>帰宅鬼ごっこ：終電の影</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app" aria-label="帰宅鬼ごっこ">
+    <canvas id="gameCanvas" aria-label="ゲーム画面"></canvas>
+
+    <section id="titleScreen" class="screen-panel title-panel">
+      <div class="title-kicker"><span class="pulse-dot"></span> LAST TRAIN // 23:47</div>
+      <h1>帰宅鬼ごっこ<em>終電の影</em></h1>
+      <p class="title-copy">駅を出たら、街はもう眠っている。<br>鬼に見つからず、灯りのついた家まで走れ。</p>
+      <div class="briefing">
+        <div><b>MOVE</b><span>WASD / 矢印</span></div>
+        <div><b>SPRINT</b><span>Shift / 走る</span></div>
+        <div><b>HIDE</b><span>E / 隠れる</span></div>
+      </div>
+      <button id="startButton" class="primary-button">夜道へ出る <span>→</span></button>
+      <p class="micro-note">音をオンにすると、鬼の足音が聞こえます。</p>
+    </section>
+
+    <section id="resultScreen" class="screen-panel result-panel hidden">
+      <div id="resultMark" class="result-mark">—</div>
+      <p id="resultKicker" class="title-kicker">MISSION REPORT</p>
+      <h2 id="resultTitle">帰宅成功</h2>
+      <p id="resultText"></p>
+      <div class="result-stats"><span>TIME <b id="resultTime">00:00</b></span><span>ALERTS <b id="resultAlerts">0</b></span></div>
+      <button id="retryButton" class="primary-button">もう一度走る <span>↻</span></button>
+    </section>
+
+    <header id="hud" class="hud hidden">
+      <div class="hud-brand"><span class="pulse-dot"></span><span>帰宅鬼ごっこ</span><small>終電の影</small></div>
+      <div class="hud-clock"><span>帰宅まで</span><strong id="timeValue">01:30</strong></div>
+      <div class="hud-bar"><span>体力</span><div><i id="staminaBar"></i></div></div>
+      <div class="hud-alert"><span id="alertLabel">QUIET</span><i id="alertDots">···</i></div>
+    </header>
+
+    <div id="hint" class="hint hidden">駅から出た。<b>オレンジの灯り</b>を目指せ。</div>
+    <div id="hidePrompt" class="hide-prompt hidden">E <span>ここに隠れる</span></div>
+
+    <div id="mobileControls" class="mobile-controls hidden" aria-label="タッチ操作">
+      <div id="joystick" class="joystick"><div id="stick" class="stick"></div></div>
+      <button id="sprintButton" class="touch-button sprint">走る<small>SPRINT</small></button>
+      <button id="hideButton" class="touch-button hide-action">隠れる<small>HIDE</small></button>
+    </div>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
