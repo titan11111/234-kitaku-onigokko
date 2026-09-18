@@ -24,7 +24,7 @@
     font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",monospace;color:#e8ecff;
     touch-action:manipulation;              /* body は manipulation */
   }
-  #game{touch-action:none}                  /* canvas は none の2段構え */
+  #game{touch-action:none;position:relative;z-index:0} /* canvas は none の2段構え。重なりはDOM順ではなくz-index */
   #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#05070f}
   #game{
     width:100%;height:100%;display:block;
@@ -51,19 +51,7 @@
   #hint{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);text-align:center;display:none}
   #overlay{
     position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    background:rgba(3,5,12,.82);text-align:center;padding:20px;
-  }
-  #overlay .panel{
-    max-width:560px;border:3px solid var(--line);background:rgba(12,17,36,.96);
-    box-shadow:0 0 0 3px #05070f, inset 0 0 0 2px #2b3560;padding:22px 26px;
-  }
-  h1{font-size:26px;line-height:1.5;color:var(--hi);text-shadow:2px 2px 0 #6b2d00;margin-bottom:6px}
-  h2{font-size:22px;margin-bottom:10px}
-  p{font-size:13px;line-height:1.9;color:#c9d2ff}
-  .keys{display:inline-block;text-align:left;margin:10px auto 4px;font-size:13px;line-height:2}
-  kbd{
-    display:inline-block;min-width:26px;padding:1px 6px;margin-right:4px;
-    border:1px solid #8b97d4;border-bottom-width:3px;border-radius:3px;background:#1b2247;font-size:11px
+    text-align:center;padding:20px;
   }
   .blink{animation:bl 1s steps(2) infinite}
   @keyframes bl{50%{opacity:.25}}
@@ -118,177 +106,235 @@
     pointer-events:auto;z-index:30;
   }
   .sysbtn{
-    width:40px;height:40px;border:1px solid rgba(0,229,255,.4);
-    background:rgba(8,12,28,.7);color:#9fe9ff;font-size:15px;
+    width:40px;height:40px;border:1px solid rgba(239,230,216,.32);
+    background:rgba(5,6,10,.72);color:#cfc6ba;font-size:15px;
     display:flex;align-items:center;justify-content:center;cursor:pointer;
-    box-shadow:0 0 12px rgba(0,229,255,.14);
   }
-  .sysbtn:active,.sysbtn.press{background:rgba(0,229,255,.28);color:#fff}
-  .sysbtn.off{border-color:rgba(255,45,120,.45);color:#ff8fb0;box-shadow:0 0 12px rgba(255,45,120,.18)}
+  .sysbtn:active,.sysbtn.press{background:rgba(239,230,216,.14);color:#fff}
+  .sysbtn.off{border-color:rgba(154,32,48,.7);color:#c45;box-shadow:none}
   @media (max-height:560px){
     #stick{width:106px;height:106px}
     .tbtn{width:60px;height:60px;font-size:11px}
   }
-  /* パッド表示時はHUDを逃がす（スティックとスタミナ／MAPの重なり対策） */
+  /* パッド表示時はHUDをプレイ領域から外す。
+     スタミナ／気配をスティック上（画面下寄り）へ上げると、三人称の主人公と重なる。 */
   body.touchmode #botLeft{
-    bottom:calc(170px + env(safe-area-inset-bottom));width:190px;font-size:12px;
+    top:calc(68px + env(safe-area-inset-top));
+    bottom:auto;
+    width:min(42vw,148px);
+    font-size:11px;
+    padding:5px 7px;
+    background:rgba(10,14,30,.62);
   }
+  body.touchmode #botLeft .barwrap{height:7px;margin-top:2px}
   body.touchmode #botRight{
     top:calc(76px + env(safe-area-inset-top));bottom:auto;
   }
   body.touchmode #map{width:96px;height:96px}
   body.touchmode #hint{bottom:calc(196px + env(safe-area-inset-bottom))}
-  @media (max-height:560px){
-    body.touchmode #botLeft{bottom:calc(140px + env(safe-area-inset-bottom))}
+  body.touchmode #topCenter{
+    min-width:0;
+    max-width:min(52vw,220px);
   }
-  .small{font-size:11px;color:#8e99cf}
+  @media (max-height:560px){
+    body.touchmode #botLeft{
+      top:calc(44px + env(safe-area-inset-top));
+      width:min(38vw,132px);
+      padding:4px 6px;
+    }
+  }
+  .small{font-size:11px;color:#8a8680}
 
   /* ==========================================================
-     サイバーパンク演出（タイトル／エンディング／ポーズ 共通）
+     パンク × 冷たい恐怖（タイトル／エンディング／ポーズ）
      ========================================================== */
   #overlay{
+    --bone:#efe6d8; --ice:#9aa8b4; --blood:#9a2030; --ink:#05060a;
     background:
-      radial-gradient(115% 80% at 50% -12%, rgba(255,20,90,.24), transparent 62%),
-      radial-gradient(100% 75% at 50% 115%, rgba(0,190,255,.16), transparent 60%),
-      rgba(2,3,9,.93);
+      radial-gradient(90% 70% at 50% 118%, rgba(90,8,18,.38), transparent 58%),
+      radial-gradient(120% 80% at 50% -30%, rgba(186,198,210,.07), transparent 52%),
+      var(--ink);
     overflow:hidden;z-index:20;
   }
-  /* 走査線 */
   #overlay::before{
     content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
-    background:repeating-linear-gradient(0deg,rgba(0,0,0,.5) 0 1px,rgba(0,0,0,0) 1px 3px);
-    opacity:.6;
+    background:
+      repeating-linear-gradient(0deg,rgba(0,0,0,.55) 0 1px,transparent 1px 3px),
+      repeating-linear-gradient(90deg,rgba(255,255,255,.015) 0 1px,transparent 1px 7px);
+    opacity:.7;
   }
-  /* 走るスキャンライン */
   #overlay::after{
-    content:"";position:absolute;left:0;right:0;height:22%;pointer-events:none;z-index:3;
-    background:linear-gradient(180deg,transparent,rgba(130,240,255,.07) 45%,transparent);
-    animation:sweep 7s linear infinite;
+    content:"";position:absolute;inset:-20%;pointer-events:none;z-index:3;
+    background:repeating-linear-gradient(-18deg,transparent 0 46px,rgba(154,32,48,.05) 46px 48px);
+    animation:grain 9s steps(2) infinite;
   }
-  @keyframes sweep{0%{top:-25%}100%{top:105%}}
-
-  /* 捕獲時：心拍する赤いヴィネット（恐怖演出） */
+  @keyframes grain{0%,100%{transform:translate(0,0)}50%{transform:translate(-8px,6px)}}
   #overlay.dead{
     background:
-      radial-gradient(130% 95% at 50% 50%, transparent 28%, rgba(120,0,20,.55) 78%, rgba(40,0,8,.9) 100%),
-      rgba(3,1,4,.94);
-    animation:heart 1.5s ease-in-out infinite;
+      radial-gradient(120% 90% at 50% 50%, transparent 22%, rgba(90,0,14,.62) 78%, rgba(12,0,2,.96) 100%),
+      #090204;
+    animation:heart 1.6s ease-in-out infinite;
   }
   @keyframes heart{
-    0%,100%{box-shadow:inset 0 0 120px rgba(255,0,40,.18)}
-    12%{box-shadow:inset 0 0 200px rgba(255,0,40,.42)}
-    24%{box-shadow:inset 0 0 130px rgba(255,0,40,.2)}
-    36%{box-shadow:inset 0 0 190px rgba(255,0,40,.36)}
+    0%,100%{box-shadow:inset 0 0 90px rgba(154,32,48,.2)}
+    14%{box-shadow:inset 0 0 160px rgba(154,32,48,.5)}
+    28%{box-shadow:inset 0 0 100px rgba(154,32,48,.22)}
+  }
+  #overlay.clear{
+    background:
+      radial-gradient(90% 70% at 50% 110%, rgba(40,48,46,.45), transparent 55%),
+      var(--ink);
+  }
+
+  .corner{
+    position:absolute;z-index:5;pointer-events:none;
+    font-family:Futura,"DIN Alternate",Impact,"Arial Black",sans-serif;
+    font-size:10px;letter-spacing:.42em;color:rgba(239,230,216,.38);
+  }
+  .corner.tl{top:calc(16px + env(safe-area-inset-top));left:calc(16px + env(safe-area-inset-left))}
+  .corner.br{
+    bottom:calc(16px + env(safe-area-inset-bottom));right:calc(16px + env(safe-area-inset-right));
+    color:var(--blood);border:1.5px solid var(--blood);padding:4px 8px;
+    letter-spacing:.28em;transform:rotate(-7deg);
   }
 
   #overlay .panel{
-    position:relative;z-index:4;width:min(92vw,600px);max-width:600px;
-    border:1px solid rgba(255,45,120,.5);
-    background:linear-gradient(180deg,rgba(12,5,22,.95),rgba(5,9,22,.97));
-    box-shadow:0 0 0 1px rgba(0,0,0,.9),0 0 34px rgba(255,30,110,.18),inset 0 0 70px rgba(0,170,255,.06);
-    padding:22px 20px 18px;
-    clip-path:polygon(0 14px,14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%);
-    max-height:92vh;overflow:auto;-webkit-overflow-scrolling:touch;
+    position:relative;z-index:4;width:min(94vw,680px);
+    background:transparent;border:0;box-shadow:none;clip-path:none;
+    padding:28px 16px 20px;max-height:92vh;overflow:auto;-webkit-overflow-scrolling:touch;
   }
-  #overlay .panel::before{
-    content:"";position:absolute;left:10px;right:10px;top:6px;height:1px;
-    background:linear-gradient(90deg,transparent,#ff2d78,transparent);opacity:.85;
-  }
+  #overlay .panel::before{display:none}
 
-  /* システムタグ */
-  .tag{
-    display:inline-block;font-family:"Courier New",monospace;font-size:10px;letter-spacing:.26em;
-    color:#00e5ff;border:1px solid rgba(0,229,255,.45);padding:3px 10px;margin-bottom:12px;
-    background:rgba(0,229,255,.07);text-shadow:0 0 8px rgba(0,229,255,.6);
+  .stamp{
+    display:inline-block;font-family:Futura,"DIN Alternate",Impact,"Arial Black",sans-serif;
+    font-size:clamp(11px,3.2vw,14px);letter-spacing:.42em;
+    color:var(--blood);border:2px solid var(--blood);padding:5px 12px;
+    transform:rotate(-8deg);margin:0 0 22px;background:rgba(5,6,10,.55);
   }
-  .tag.bad{color:#ff2d78;border-color:rgba(255,45,120,.5);background:rgba(255,45,120,.08);text-shadow:0 0 8px rgba(255,45,120,.7)}
-  .tag.good{color:#7dffb8;border-color:rgba(125,255,184,.45);background:rgba(125,255,184,.08);text-shadow:0 0 8px rgba(125,255,184,.6)}
+  .stamp.good{color:var(--ice);border-color:var(--ice);transform:rotate(7deg)}
+  .stamp.halt{color:var(--bone);border-color:rgba(239,230,216,.45);transform:rotate(-3deg)}
 
-  /* グリッチ見出し */
-  h1.glitch,h2.glitch{
-    position:relative;display:inline-block;margin:2px 0 4px;
-    font-size:clamp(28px,8.6vw,50px);line-height:1.2;letter-spacing:.1em;font-weight:700;
-    color:#fff;text-shadow:0 0 12px rgba(255,45,120,.75),0 0 34px rgba(255,0,90,.3);
-    animation:flick 5.2s steps(3) infinite;
+  .title-mark{
+    margin:0;line-height:.9;transform:rotate(-1.4deg);
+    text-align:center;
   }
+  .title-mark .t1,.title-mark .t2{
+    display:block;width:fit-content;margin-left:auto;margin-right:auto;
+  }
+  .title-mark .t1{
+    font-family:"Hiragino Mincho ProN","Yu Mincho","Hiragino Mincho",serif;
+    font-size:clamp(22px,7vw,40px);font-weight:700;letter-spacing:.55em;
+    color:var(--ice);margin:0 auto 10px;padding-left:.55em;
+  }
+  .title-mark .t2{
+    font-family:"Hiragino Mincho ProN","Yu Mincho","Hiragino Mincho",serif;
+    font-size:clamp(48px,16vw,104px);font-weight:900;letter-spacing:-.06em;
+    color:var(--bone);
+    text-shadow:3px 4px 0 #000, -2px 0 0 var(--blood);
+  }
+  h2.glitch{
+    position:relative;display:inline-block;margin:4px 0 8px;
+    font-family:"Hiragino Mincho ProN","Yu Mincho","Hiragino Mincho",serif;
+    font-size:clamp(40px,13vw,86px);line-height:.95;letter-spacing:-.04em;font-weight:900;
+    color:var(--bone);text-shadow:3px 3px 0 #000,-1px 0 0 var(--blood);
+    transform:rotate(-1.2deg);
+  }
+  .glitch{position:relative;animation:flick 6.4s steps(3) infinite}
   .glitch::before,.glitch::after{
     content:attr(data-t);position:absolute;left:0;top:0;width:100%;
     pointer-events:none;mix-blend-mode:screen;
   }
-  .glitch::before{color:#00e5ff;opacity:.85;clip-path:inset(0 0 52% 0);transform:translate(-2px,-1px);animation:g1 3.4s steps(2) infinite}
-  .glitch::after{color:#ff2d78;opacity:.85;clip-path:inset(48% 0 0 0);transform:translate(2px,1px);animation:g2 2.7s steps(2) infinite}
-  @keyframes g1{0%,86%{transform:translate(-2px,-1px)}89%{transform:translate(-7px,-3px)}93%{transform:translate(3px,1px)}100%{transform:translate(-2px,-1px)}}
+  .glitch::before{color:var(--ice);opacity:.8;clip-path:inset(0 0 54% 0);transform:translate(-2px,-1px);animation:g1 3.6s steps(2) infinite}
+  .glitch::after{color:var(--blood);opacity:.85;clip-path:inset(50% 0 0 0);transform:translate(2px,1px);animation:g2 2.8s steps(2) infinite}
+  @keyframes g1{0%,86%{transform:translate(-2px,-1px)}89%{transform:translate(-6px,-3px)}93%{transform:translate(3px,1px)}100%{transform:translate(-2px,-1px)}}
   @keyframes g2{0%,84%{transform:translate(2px,1px)}88%{transform:translate(7px,3px)}92%{transform:translate(-3px,-1px)}100%{transform:translate(2px,1px)}}
-  @keyframes flick{0%,95%{opacity:1}96%{opacity:.5}97%{opacity:1}98.5%{opacity:.72}}
-  .glitch.bad{color:#ffe9ec;text-shadow:0 0 12px rgba(255,25,60,.9),0 0 42px rgba(255,0,40,.45)}
-  .glitch.good{color:#eafff8;text-shadow:0 0 12px rgba(0,255,190,.7),0 0 42px rgba(0,200,255,.35)}
+  @keyframes flick{0%,95%{opacity:1}96%{opacity:.55}97%{opacity:1}98.5%{opacity:.78}}
+  .glitch.bad{color:#f3e6e6;text-shadow:3px 3px 0 #000,0 0 18px rgba(154,32,48,.55)}
+  .glitch.good{color:var(--bone);text-shadow:3px 3px 0 #000,0 0 16px rgba(154,168,180,.25)}
 
   .sub-en{
-    font-family:"Courier New",monospace;
-    font-size:clamp(9px,2.5vw,12px);
-    letter-spacing:clamp(.06em,1.2vw,.3em);
-    white-space:nowrap;color:#8ea8d6;margin-bottom:10px;
+    font-family:Futura,"DIN Alternate",Impact,sans-serif;
+    font-size:clamp(10px,2.8vw,13px);
+    letter-spacing:.46em;white-space:nowrap;
+    color:rgba(239,230,216,.5);margin:14px 0 0;
+  }
+  .best-num{
+    margin-top:22px;font-family:Futura,"DIN Alternate",Impact,sans-serif;
+    font-size:12px;letter-spacing:.38em;color:rgba(239,230,216,.4);
+    min-height:1.2em;
+  }
+  .cold-line{
+    margin-top:18px;font-family:"Hiragino Mincho ProN","Yu Mincho",serif;
+    font-size:clamp(12px,3.4vw,15px);letter-spacing:.18em;color:rgba(239,230,216,.55);
   }
 
-  /* 警告テロップ */
-  .warn-bar{
-    overflow:hidden;border-top:1px solid rgba(255,45,120,.35);border-bottom:1px solid rgba(255,45,120,.35);
-    background:rgba(255,45,120,.07);padding:4px 0;margin:10px 0 12px;
-  }
-  .warn-bar span{
-    display:inline-block;white-space:nowrap;font-family:"Courier New",monospace;
-    font-size:11px;letter-spacing:.18em;color:#ff8fb0;animation:slide 26s linear infinite;
-  }
-  @keyframes slide{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+  #overlay p{color:rgba(239,230,216,.62)}
+  b.oni{color:var(--blood)}
+  b.goal{color:var(--bone)}
 
-  /* 本文・キー表 */
-  #overlay p{color:#c2ccf2}
-  b.oni{color:#ff3b5c;text-shadow:0 0 10px rgba(255,50,90,.85)}
-  b.goal{color:#ffe066;text-shadow:0 0 10px rgba(255,220,100,.6)}
-  .keys{font-family:"Courier New",monospace;color:#b9c6ef;font-size:clamp(11px,3vw,13px);line-height:1.85}
-  .keys>div{margin-bottom:2px}
-  kbd{
-    background:#0b1430;border:1px solid rgba(0,229,255,.5);border-bottom-width:3px;
-    color:#bfefff;box-shadow:0 0 8px rgba(0,229,255,.18);
-  }
-
-  /* 成績表示 */
-  .statrow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0 4px}
+  .statrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:22px 0 4px}
   .stat{
-    min-width:128px;border:1px solid rgba(140,160,220,.28);background:rgba(255,255,255,.03);
-    padding:8px 12px;font-family:"Courier New",monospace;
+    min-width:108px;border:1px solid rgba(239,230,216,.18);
+    padding:8px 12px;font-family:Futura,"DIN Alternate",sans-serif;
   }
-  .stat .k{display:block;font-size:10px;letter-spacing:.2em;color:#7f8cc4;margin-bottom:3px}
-  .stat b{font-size:19px;color:#e8ecff;text-shadow:0 0 10px rgba(120,200,255,.35)}
-  .rank{
-    font-family:"Courier New",monospace;font-size:46px;line-height:1;color:#ffe066;
-    text-shadow:0 0 18px rgba(255,200,60,.65);
-  }
+  .stat .k{display:block;font-size:9px;letter-spacing:.28em;color:rgba(239,230,216,.38);margin-bottom:3px}
+  .stat b{font-size:20px;color:var(--bone)}
+  .rank{font-size:44px;line-height:1;color:var(--blood);letter-spacing:.04em}
 
-  /* 続行プロンプト */
   .cta{
-    margin-top:14px;font-family:"Courier New",monospace;font-size:13px;letter-spacing:.16em;
-    color:#00e5ff;text-shadow:0 0 12px rgba(0,229,255,.7);
+    margin-top:28px;font-family:Futura,"DIN Alternate",Impact,sans-serif;
+    font-size:13px;letter-spacing:.52em;color:var(--bone);
+    background:none;border:0;padding:14px 20px;min-height:48px;cursor:pointer;
   }
-  .cta.bad{color:#ff6b8a;text-shadow:0 0 12px rgba(255,45,120,.7)}
-  .cta.good{color:#7dffb8;text-shadow:0 0 12px rgba(125,255,184,.7)}
+  .cta.bad{color:var(--blood)}
+  .cta.good{color:var(--ice)}
 
-  /* パネル内ボタン（ポーズ画面） */
   .pbtn{
-    pointer-events:auto;display:inline-block;margin:6px 4px 0;padding:9px 16px;
-    font-family:"Courier New",monospace;font-size:13px;letter-spacing:.1em;
-    border:1px solid rgba(0,229,255,.5);background:rgba(0,229,255,.08);color:#bfefff;cursor:pointer;
+    pointer-events:auto;display:inline-block;margin:8px 4px 0;padding:10px 18px;
+    font-family:Futura,"DIN Alternate",sans-serif;font-size:12px;letter-spacing:.18em;
+    border:1px solid rgba(239,230,216,.45);background:transparent;color:var(--bone);cursor:pointer;
   }
-  .pbtn:active,.pbtn.press{background:rgba(0,229,255,.3);color:#fff}
-  .pbtn.bad{border-color:rgba(255,45,120,.5);background:rgba(255,45,120,.08);color:#ffb3c6}
+  .pbtn:active,.pbtn.press{background:rgba(239,230,216,.12)}
+  .pbtn.bad{border-color:var(--blood);color:#e8b4b8}
 
   @media (max-height:620px){
-    .warn-bar{display:none}
-    .keys{font-size:11px;line-height:1.8}
-    #overlay .panel{padding:16px 16px 14px}
+    .title-mark .t2{font-size:clamp(40px,12vw,72px)}
+    h2.glitch{font-size:clamp(32px,11vw,64px)}
+    #overlay .panel{padding:16px 12px 12px}
+    .cta{margin-top:16px}
+  }
+  /* ステージ切替：ぼやけて浮かび、消える。操作は奪わない */
+  #stageMark{
+    position:absolute;left:50%;top:36%;z-index:8;
+    transform:translate(-50%,18px);
+    text-align:center;pointer-events:none;display:none;
+    color:#efe6d8;opacity:0;
+  }
+  #stageMark.show{display:block;animation:stageRise 2.6s ease-out forwards;will-change:opacity,transform,filter}
+  #stageMark .k{
+    display:block;
+    font-family:Futura,"DIN Alternate",Impact,"Arial Black",sans-serif;
+    font-size:clamp(11px,3.2vw,14px);letter-spacing:.46em;padding-left:.46em;
+    color:#9a2030;margin-bottom:6px;
+  }
+  #stageMark .n{
+    display:block;
+    font-family:"Hiragino Mincho ProN","Yu Mincho","Hiragino Mincho",serif;
+    font-size:clamp(56px,18vw,108px);font-weight:900;line-height:.9;letter-spacing:.12em;
+    text-shadow:3px 4px 0 #000,-2px 0 0 #9a2030;
+    white-space:nowrap;
+  }
+  @keyframes stageRise{
+    0%  {opacity:0;filter:blur(16px);-webkit-filter:blur(16px);transform:translate(-50%,22px)}
+    22% {opacity:1;filter:blur(2px);-webkit-filter:blur(2px);transform:translate(-50%,4px)}
+    38% {opacity:1;filter:blur(0);-webkit-filter:blur(0);transform:translate(-50%,-4px)}
+    68% {opacity:.9;filter:blur(0);-webkit-filter:blur(0);transform:translate(-50%,-14px)}
+    100%{opacity:0;filter:blur(12px);-webkit-filter:blur(12px);transform:translate(-50%,-38px)}
   }
   @media (prefers-reduced-motion:reduce){
-    #overlay::after,.glitch,.glitch::before,.glitch::after,.warn-bar span,.blink{animation:none!important}
+    #overlay::after,.glitch,.glitch::before,.glitch::after,.blink{animation:none!important}
+    #stageMark.show{animation:stageRiseFlat 1.6s linear forwards}
+    @keyframes stageRiseFlat{0%{opacity:0;filter:none}18%{opacity:1}70%{opacity:1}100%{opacity:0}}
   }
 </style>
 <meta property="og:title" content="帰宅鬼ごっこ 〜交番までダッシュ〜">
@@ -299,10 +345,26 @@
 </head>
 <body>
 <div id="wrap">
+  <!-- 幕を canvas より前に置く（harness のタップ対象＝見える開始ボタン）。見た目は z-index で制御 -->
+  <div id="overlay" class="title">
+    <div class="corner tl">00:14</div>
+    <div class="corner br">NO EXIT</div>
+    <div class="panel" id="panel">
+      <div class="stamp">LAST TRAIN</div>
+      <h1 class="title-mark">
+        <span class="t1">帰宅</span>
+        <span class="t2 glitch" data-t="鬼ごっこ">鬼ごっこ</span>
+      </h1>
+      <div class="sub-en">DEAD STREET</div>
+      <div class="best-num" id="bestLine"></div>
+      <button type="button" class="cta blink" id="startTap">TAP</button>
+    </div>
+  </div>
+
   <canvas id="game"></canvas>
 
   <div id="hud">
-    <div id="topLeft" class="box">TIME <span id="time">0:00</span></div>
+    <div id="topLeft" class="box">TIME <span id="time">0:00</span><div class="small" id="stageLab">1 / 5</div></div>
     <div id="topCenter" class="box"><span id="state" class="safe">● 安全</span><div class="small" id="sub">交番をさがせ</div></div>
 
     <div id="botLeft" class="box">
@@ -322,6 +384,10 @@
     </div>
 
     <div id="hint" class="box"><span id="hintText"></span></div>
+    <div id="stageMark" aria-live="polite">
+      <span class="k">STAGE</span>
+      <span class="n" id="stageMarkN">2</span>
+    </div>
   </div>
 
   <div id="sysbar">
@@ -337,26 +403,14 @@
     <div class="tbtn" id="tHide" role="button" aria-label="かくれる">かくれる</div>
   </div>
 
-  <div id="overlay">
-    <div class="panel" id="panel">
-      <div class="tag">SECTOR-07 ∕ 00:14 ∕ 終電通過済み</div>
-      <h1 class="glitch" data-t="帰宅鬼ごっこ">帰宅鬼ごっこ</h1>
-      <div class="sub-en">N I G H T   R U N  ∕  交番までダッシュ</div>
-      <div class="warn-bar"><span>⚠ 鬼影シグナル検出　▮　街灯の下は捕捉されます　▮　足音を残すな　▮　振り返るな　▮　⚠ 鬼影シグナル検出　▮　街灯の下は捕捉されます　▮　足音を残すな　▮　振り返るな　▮　</span></div>
-      <p>駅を出た瞬間、うしろに <b class="oni">鬼</b> がいた。<br>
-      死んだ住宅街を抜けて、<b class="goal">交番</b> のあかりまで走れ。</p>
-      <div class="keys">
-        <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>/矢印　移動</div>
-        <div><kbd>Shift</kbd> ダッシュ（足音が響く）</div>
-        <div><kbd>Space</kbd> 物陰にかくれる</div>
-        <div><kbd>P</kbd> ポーズ　<kbd>M</kbd> ミュート　<kbd>Q</kbd><kbd>E</kbd> 視点</div>
-        <div class="small">スマホ ＝ 左下スティック ＋ 右下ボタン</div>
-      </div>
-      <p class="small" id="bestLine">鬼は音と視線で追ってくる。見失わせて、かくれてやり過ごせ。</p>
-      <p class="cta blink">▶ TAP / ENTER — 走れ</p>
-    </div>
-  </div>
 </div>
+
+<!-- preload=none: 起動時に本体を取りに行くと harness の networkidle が落ちる。最初のタップで読む。
+     m4a は AAC-LC 96k（HE-AACは native ffmpeg で壊れる）。mp3 は非対応ブラウザ用。 -->
+<audio id="bgm" loop preload="none" playsinline webkit-playsinline>
+  <source src="audio/Behind_The_Locked_Gate.m4a" type="audio/mp4">
+  <source src="audio/Behind_The_Locked_Gate.mp3" type="audio/mpeg">
+</audio>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -373,6 +427,10 @@ if(typeof THREE==="undefined"){
 const ROAD=10, BLOCK=30, CELL=ROAD+BLOCK, N=5;
 const WORLD=ROAD+N*CELL, HALF=WORLD/2;          // 210 / 105
 const NAV=2.0, NW=Math.ceil(WORLD/NAV);          // ナビグリッド
+const ONI_SCALE=2;          /* 見た目だけ2倍。速度・視界は据え置き */
+const ONI_RADIUS=0.72;      /* 通路10m。2倍にすると詰まるので当たりは控えめ */
+const ONI_CATCH=2.0;        /* 旧1.5。モデルに食い込む手前＋短いリーチ */
+const ONI_CATCH_HIDE=1.35;  /* 旧1.0。隠れ中はより接近しないと捕まる */
 
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const ri=(a,b)=>Math.floor(rnd(a,b+1));
@@ -659,13 +717,48 @@ const START={x:0,z:HALF-ROAD/2-0.5};
   const pl=new THREE.PointLight(0xffe9b5,0.7,22); pl.position.set(0,5,HALF-ROAD-1); scene.add(pl);
 })();
 
-/* 交番の位置：駅から遠い街区の角 */
-const KOBAN=(function(){
-  let bx=ri(0,N-1), bz=ri(0,1);
-  const x0=blockOrigin(bx), z0=blockOrigin(bz);
-  const x=x0+ (Math.random()<0.5? -0.0 : BLOCK) , z=z0-ROAD/2+rnd(-1,1);
-  return {x:clamp(x0+BLOCK/2+rnd(-8,8),-HALF+8,HALF-8), z:z0-ROAD/2};
-})();
+const blocked=new Uint8Array(NW*NW);
+function cellIdx(ix,iz){ return iz*NW+ix; }
+function toCell(v){ return clamp(Math.floor((v+HALF)/NAV),0,NW-1); }
+function cellCenter(i){ return -HALF+(i+0.5)*NAV; }
+function rasterize(){
+  blocked.fill(0);
+  for(const s of solids){
+    const x0=toCell(s.minX-0.9), x1=toCell(s.maxX+0.9);
+    const z0=toCell(s.minZ-0.9), z1=toCell(s.maxZ+0.9);
+    for(let z=z0;z<=z1;z++) for(let x=x0;x<=x1;x++) blocked[cellIdx(x,z)]=1;
+  }
+}
+
+/* 交番：ゴール。到達でステージが進み、5でクリア。位置はステージごとに移す */
+const KOBAN={x:0,z:0};
+let kobanSolid=null;
+function pickKobanPos(fromX,fromZ,minDist){
+  let best=null, bestD=0;
+  for(let i=0;i<140;i++){
+    const bx=ri(0,N-1), bz=ri(0,N-1);
+    const x0=blockOrigin(bx), z0=blockOrigin(bz);
+    const p={
+      x:clamp(x0+BLOCK/2+rnd(-8,8),-HALF+8,HALF-8),
+      z:z0-ROAD/2
+    };
+    const d=Math.hypot(p.x-fromX,p.z-fromZ);
+    if(d>=minDist && d>bestD){ best=p; bestD=d; }
+  }
+  return best || {x:clamp(-HALF+20, -HALF+8, HALF-8), z:-HALF+ROAD};
+}
+function placeKoban(x,z){
+  KOBAN.x=x; KOBAN.z=z;
+  const g=window.__kobanGroup;
+  if(g) g.position.set(x,0,z);
+  if(!kobanSolid){
+    kobanSolid={minX:x-3.5,maxX:x+3.5,minZ:z-3,maxZ:z+3};
+    solids.push(kobanSolid);
+  }else{
+    kobanSolid.minX=x-3.5; kobanSolid.maxX=x+3.5; kobanSolid.minZ=z-3; kobanSolid.maxZ=z+3;
+  }
+  rasterize();
+}
 (function koban(){
   const g=new THREE.Group();
   const b=new THREE.Mesh(new THREE.BoxGeometry(7,5.2,6),
@@ -689,25 +782,15 @@ const KOBAN=(function(){
           blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
   beam.position.y=22; g.add(beam);
   const pl=new THREE.PointLight(0xffd0a0,1.0,20); pl.position.set(0,4,3); g.add(pl);
-  g.position.set(KOBAN.x,0,KOBAN.z); worldGroup.add(g);
-  addSolid(KOBAN.x-3.5,KOBAN.x+3.5,KOBAN.z-3,KOBAN.z+3);
   window.__kobanGroup=g;
+  worldGroup.add(g);
+  const p=pickKobanPos(START.x, START.z, 70);
+  placeKoban(p.x, p.z);
 })();
 
 /* ============================================================
    ナビゲーション用グリッド
 ============================================================ */
-const blocked=new Uint8Array(NW*NW);
-function cellIdx(ix,iz){ return iz*NW+ix; }
-function toCell(v){ return clamp(Math.floor((v+HALF)/NAV),0,NW-1); }
-function cellCenter(i){ return -HALF+(i+0.5)*NAV; }
-(function rasterize(){
-  for(const s of solids){
-    const x0=toCell(s.minX-0.9), x1=toCell(s.maxX+0.9);
-    const z0=toCell(s.minZ-0.9), z1=toCell(s.maxZ+0.9);
-    for(let z=z0;z<=z1;z++) for(let x=x0;x<=x1;x++) blocked[cellIdx(x,z)]=1;
-  }
-})();
 const queue=new Int32Array(NW*NW);
 function bfsFrom(tx,tz,dist){
   dist.fill(-1);
@@ -807,6 +890,7 @@ function makeOni(color,eye){
   club.position.set(0.62,1.5,0.1); club.rotation.z=-0.4; g.add(club);
   const pl=new THREE.PointLight(eye,0.9,13); pl.position.set(0,2.2,0); g.add(pl);
   g.userData={l1,l2};
+  g.scale.setScalar(ONI_SCALE);
   scene.add(g);
   return g;
 }
@@ -820,19 +904,82 @@ const playerMesh=makePlayer();
 const playerShadow=shadowBlob(0.45);
 
 /* ============================================================
-   サウンド（簡易シンセ）
+   サウンド（簡易シンセ ＋ BGM）
+   BGMは decodeAudioData に載せない（iPhoneで展開が重い）。
+   <audio> のまま流し、音量だけ WebAudio の gain を通す
+   （iOS Safari は media要素の .volume 代入を無視する）
 ============================================================ */
-let actx=null, muted=false;
+let actx=null, muted=false, audioUnlocked=false;
 try{ muted = localStorage.getItem("tg.234.mute")==="1"; }catch(e){}
 function audio(){ if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
-/* iOS: ユーザー操作のたびに suspended を解除する */
-function unlockAudio(){ const a=audio(); if(a && a.state==="suspended"){ try{ a.resume(); }catch(e){} } }
+
+const BGM_VOL=0.34;
+const BGM_NEAR_MUL=1.1;
+const BGM_NEAR_IN=20;   /* 気配と同じ：近づいたら上げる */
+const BGM_NEAR_OUT=22;  /* 少し広くして境界で点滅しない */
+let bgmEl=null, bgmSrc=null, bgmGain=null, bgmOffT=0;
+let bgmNear=false;
+function bgmPlayVol(){ return BGM_VOL*(bgmNear?BGM_NEAR_MUL:1); }
+function syncBgmNear(nearest){
+  let next=bgmNear;
+  if(state!==ST.PLAY) next=false;
+  else if(bgmNear) next=nearest<BGM_NEAR_OUT;
+  else next=nearest<BGM_NEAR_IN;
+  if(next===bgmNear) return;
+  bgmNear=next;
+  if(muted||!bgmEl||bgmEl.paused) return;
+  bgmFade(bgmPlayVol(),0.28);
+}
+function bgmInit(){
+  if(!bgmEl){ bgmEl=document.getElementById("bgm"); if(!bgmEl) return false; bgmEl.loop=true; }
+  if(!bgmGain){
+    const a=audio();
+    if(a && a.createMediaElementSource){
+      try{
+        bgmSrc=a.createMediaElementSource(bgmEl);
+        bgmGain=a.createGain(); bgmGain.gain.value=0;
+        bgmSrc.connect(bgmGain); bgmGain.connect(a.destination);
+      }catch(e){ bgmSrc=null; bgmGain=null; }
+    }
+  }
+  return true;
+}
+function bgmFade(to,sec){
+  if(!bgmGain){ if(bgmEl){ try{ bgmEl.volume=to; }catch(e){} } return; }
+  const a=audio(); if(!a) return;
+  const t=a.currentTime, g=bgmGain.gain;
+  g.cancelScheduledValues(t); g.setValueAtTime(g.value,t); g.linearRampToValueAtTime(to,t+sec);
+}
+function bgmStart(){
+  if(muted||!bgmInit()) return;
+  clearTimeout(bgmOffT);
+  const pr=bgmEl.play();
+  if(pr&&pr.catch) pr.catch(function(){});
+  bgmFade(bgmPlayVol(),1.2);
+}
+function bgmStop(){
+  if(!bgmEl) return;
+  bgmFade(0,0.32);
+  clearTimeout(bgmOffT);
+  bgmOffT=setTimeout(function(){
+    if(bgmEl && (muted || document.hidden || (state!==ST.PLAY && state!==ST.TITLE))) bgmEl.pause();
+  },360);
+}
+
+/* iOS: ユーザー操作のたびに suspended を解除し、BGMを同じジェスチャ内で play する */
+function unlockAudio(){
+  const a=audio(); if(a && a.state==="suspended"){ try{ a.resume(); }catch(e){} }
+  audioUnlocked=true;
+  if(!muted) bgmStart();
+}
 function setMute(v){
   muted=!!v;
   try{ localStorage.setItem("tg.234.mute", muted?"1":"0"); }catch(e){}
   const b=document.getElementById("btnMute");
   if(b){ b.textContent = muted?"✕":"♪"; b.classList.toggle("off",muted);
          b.setAttribute("aria-label", muted?"音を出す":"音を消す"); }
+  if(muted) bgmStop();
+  else if(audioUnlocked) bgmStart();
 }
 function beep(freq,dur,type,vol,slide){
   if(muted) return;
@@ -880,25 +1027,54 @@ const player={
   sta:1, breath:1, hidden:false, hideRef:null, walkPhase:0, noise:0
 };
 let camYaw=Math.PI, camDist=6.6, elapsed=0, kobanFound=false, hintShown=false;
+let stage=1, stageLock=0;
+const STAGES=5;
+const ONI_KINDS=[
+  {color:0x9a2030, eye:0xffe066}, /* 赤 */
+  {color:0x2a4a8a, eye:0xb8e6ff}, /* 青 */
+  {color:0xc9a227, eye:0xfff4c0}, /* 黄 */
+  {color:0x1f6b45, eye:0x8dffc0}, /* 緑 */
+  {color:0xd6d0c6, eye:0xff4d5e}  /* 白 */
+];
 const onis=[];
 
-function spawnOni(color,eye,minDist){
+function spawnOni(kind,minDist){
   let p=randomRoadPoint(), tries=0;
   while(Math.hypot(p.x-player.x,p.z-player.z)<minDist && tries++<300) p=randomRoadPoint();
-  const m=makeOni(color,eye);
+  const m=makeOni(kind.color,kind.eye);
   m.position.set(p.x,0,p.z);
   onis.push({mesh:m, x:p.x, z:p.z, yaw:0, state:"patrol", target:randomRoadPoint(),
-             lastKnown:null, pathTime:0, searchTime:0, speed:3.5, shadow:shadowBlob(0.6),
-             growl:0, alert:0, dist:new Int32Array(NW*NW)});
+             lastKnown:null, pathTime:0, searchTime:0,
+             speed:3.25+onis.length*0.22, shadow:shadowBlob(0.6*ONI_SCALE),
+             growl:0, alert:0, dist:new Int32Array(NW*NW), color:kind.color});
+}
+
+function nextStage(){
+  if(stage>=STAGES) return;
+  stage+=1;
+  stageLock=0.45;
+  kobanFound=false;
+  spawnOni(ONI_KINDS[stage-1], 52);
+  const p=pickKobanPos(player.x, player.z, 62);
+  placeKoban(p.x, p.z);
+  player.sta=Math.min(1, player.sta+0.4);
+  showStageBanner(stage);
+  beep(700,0.1,"square",0.07);
+  setTimeout(()=>beep(920,0.12,"square",0.07),90);
 }
 
 function resetGame(){
+  hideStageBanner();
+  bgmNear=false;
   player.x=START.x; player.z=START.z; player.yaw=Math.PI;
   player.sta=1; player.breath=1; player.hidden=false; player.hideRef=null; player.noise=0;
   camYaw=Math.PI; elapsed=0; kobanFound=false; hintShown=false;
+  stage=1; stageLock=0;
   onis.forEach(o=>{scene.remove(o.mesh); scene.remove(o.shadow);});
   onis.length=0;
-  spawnOni(0xc0392b,0xffe066,55);
+  const p=pickKobanPos(START.x, START.z, 70);
+  placeKoban(p.x, p.z);
+  spawnOni(ONI_KINDS[0], 55);
 }
 
 /* ============================================================
@@ -1021,9 +1197,15 @@ document.addEventListener("dblclick",e=>e.preventDefault());
 document.addEventListener("contextmenu",e=>e.preventDefault());
 document.addEventListener("gesturestart",e=>e.preventDefault());
 document.addEventListener("pointerdown",unlockAudio,{once:true});
-/* 裏に回ったら自動ポーズ（明示ポーズはP／Ⅱボタン） */
+document.addEventListener("keydown",unlockAudio,{once:true});
+/* 裏に回ったら自動ポーズ（明示ポーズはP／Ⅱボタン）。BGMも止める */
 document.addEventListener("visibilitychange",()=>{
-  if(document.hidden && state===ST.PLAY) pauseGame();
+  if(document.hidden){
+    if(state===ST.PLAY) pauseGame();
+    else bgmStop();
+  }else if(!muted && state===ST.TITLE){
+    bgmStart();
+  }
 });
 
 /* ============================================================
@@ -1129,7 +1311,7 @@ function updateOni(o,dt){
   mvx/=ml; mvz/=ml;
 
   const spd=(o.state==="chase"? o.speed*1.32 : o.state==="search"? o.speed*0.95 : o.speed*0.72);
-  moveWithCollision(o,mvx*spd*dt,mvz*spd*dt,0.5);
+  moveWithCollision(o,mvx*spd*dt,mvz*spd*dt,ONI_RADIUS);
 
   const want=Math.atan2(mvx,mvz);
   let diff=((want-o.yaw+Math.PI*3)%(Math.PI*2))-Math.PI;
@@ -1138,12 +1320,12 @@ function updateOni(o,dt){
   o.mesh.position.set(o.x,0,o.z);
   o.mesh.rotation.y=o.yaw;
   o.shadow.position.set(o.x,0.3,o.z);
-  const ph=performance.now()/1000*(o.state==="chase"?11:6);
+  const ph=performance.now()/1000*(o.state==="chase"?8:4.5);
   o.mesh.userData.l1.rotation.x=Math.sin(ph)*0.7;
   o.mesh.userData.l2.rotation.x=-Math.sin(ph)*0.7;
 
-  /* 捕獲 */
-  if(d<1.5 && state===ST.PLAY && !(player.hidden && d>1.0)){ gameOver(); }
+  /* 捕獲：見た目2倍に合わせて少し広げ、隠れ中はより接近しないと捕まる */
+  if(d<ONI_CATCH && state===ST.PLAY && !(player.hidden && d>ONI_CATCH_HIDE)){ gameOver(); }
 
   /* うなり声 */
   o.growl-=dt;
@@ -1155,7 +1337,8 @@ function updateOni(o,dt){
    HUD
 ============================================================ */
 const el={
-  time:document.getElementById("time"), state:document.getElementById("state"),
+  time:document.getElementById("time"), stageLab:document.getElementById("stageLab"),
+  state:document.getElementById("state"),
   sub:document.getElementById("sub"), sta:document.getElementById("staBar"),
   pres:document.getElementById("presenceBar"), breathRow:document.getElementById("breathRow"),
   breath:document.getElementById("breathBar"), hint:document.getElementById("hint"),
@@ -1166,6 +1349,26 @@ const el={
 const mctx=el.map.getContext("2d");
 let flashT=0;
 function flash(msg){ el.hintText.textContent=msg; el.hint.style.display="block"; flashT=1.6; }
+let stageMarkT=0;
+function hideStageBanner(){
+  const box=document.getElementById("stageMark");
+  if(!box) return;
+  box.classList.remove("show");
+  box.style.display="none";
+  clearTimeout(stageMarkT);
+}
+function showStageBanner(n){
+  const box=document.getElementById("stageMark");
+  const num=document.getElementById("stageMarkN");
+  if(!box||!num) return;
+  num.textContent=String(n);
+  box.classList.remove("show");
+  box.style.display="block";
+  void box.offsetWidth;
+  box.classList.add("show");
+  clearTimeout(stageMarkT);
+  stageMarkT=setTimeout(hideStageBanner,2700);
+}
 
 function drawMap(){
   const S=el.map.width, sc=S/WORLD;
@@ -1187,8 +1390,8 @@ function drawMap(){
   for(const o of onis){
     const d=Math.hypot(o.x-player.x,o.z-player.z);
     if(d<30||o.state==="chase"){
-      mctx.fillStyle="#ff4d5e";
-      mctx.fillRect((o.x+HALF)*sc-2,(o.z+HALF)*sc-2,4,4);
+      mctx.fillStyle="#"+("000000"+o.color.toString(16)).slice(-6);
+      mctx.fillRect((o.x+HALF)*sc-3,(o.z+HALF)*sc-3,6,6);
     }
   }
   /* プレイヤー */
@@ -1203,7 +1406,7 @@ function start(){
   audio(); unlockAudio();
   if(state!==ST.PLAY){
     resetGame(); state=ST.PLAY;
-    el.overlay.classList.remove("dead");
+    el.overlay.classList.remove("dead","title","clear");
     el.overlay.style.display="none";
     beep(660,0.12,"square",0.07);
   }
@@ -1211,16 +1414,15 @@ function start(){
 function pauseGame(){
   if(state!==ST.PLAY) return;
   state=ST.PAUSE;
+  bgmStop();
   if(document.exitPointerLock) document.exitPointerLock();
   tMove={x:0,y:0}; tDash=false; lookDir=0;
   el.panel.innerHTML=
-    '<div class="tag">SYSTEM HALT ∕ 一時停止中</div>'+
+    '<div class="stamp halt">HALT</div>'+
     '<h2 class="glitch" data-t="PAUSE">PAUSE</h2>'+
-    '<div class="sub-en">時間は止まった。鬼も、止まっている。</div>'+
-    '<div class="statrow"><div class="stat"><span class="k">ELAPSED</span><b>'+fmt(elapsed)+'</b></div></div>'+
-    '<p style="margin-top:8px"><span class="pbtn" id="pbResume">▶ 再開</span>'+
-    '<span class="pbtn bad" id="pbRestart">↺ 最初から</span></p>'+
-    '<p class="cta">TAP / ENTER / P — 再開</p>';
+    '<div class="statrow"><div class="stat"><span class="k">TIME</span><b>'+fmt(elapsed)+'</b></div></div>'+
+    '<p style="margin-top:10px"><span class="pbtn" id="pbResume">RESUME</span>'+
+    '<span class="pbtn bad" id="pbRestart">RESET</span></p>';
   const r=document.getElementById("pbResume"), rs=document.getElementById("pbRestart");
   if(r)  r.addEventListener("click",ev=>{ ev.stopPropagation(); resumeGame(); });
   if(rs) rs.addEventListener("click",ev=>{ ev.stopPropagation(); start(); });
@@ -1229,49 +1431,50 @@ function pauseGame(){
 function resumeGame(){
   if(state!==ST.PAUSE) return;
   state=ST.PLAY; el.overlay.style.display="none"; last=performance.now();
+  unlockAudio();
 }
 function gameOver(){
   if(state!==ST.PLAY) return;
-  state=ST.OVER; caughtSfx();
+  state=ST.OVER; bgmStop(); caughtSfx();
   el.overlay.classList.add("dead");
+  el.overlay.classList.remove("title","clear");
   if(document.exitPointerLock) document.exitPointerLock();
   tMove={x:0,y:0}; tDash=false; lookDir=0;
   el.panel.innerHTML=
-    '<div class="tag bad">SIGNAL LOST ∕ 追跡完了 ∕ 生体反応 消失</div>'+
+    '<div class="stamp">CAUGHT</div>'+
     '<h2 class="glitch bad" data-t="つかまった">つかまった</h2>'+
-    '<div class="sub-en">Y O U   W E R E   C A U G H T</div>'+
-    '<div class="warn-bar"><span>▮ 住民登録 抹消 ▮ 通報は受理されません ▮ 明朝、誰もあなたを探しません '+
-    '▮ 住民登録 抹消 ▮ 通報は受理されません ▮ 明朝、誰もあなたを探しません </span></div>'+
+    '<div class="sub-en">NO WITNESS</div>'+
     '<div class="statrow">'+
       '<div class="stat"><span class="k">SURVIVED</span><b>'+fmt(elapsed)+'</b></div>'+
-      '<div class="stat"><span class="k">交番</span><b>'+(kobanFound?"発見済み":"未発見")+'</b></div>'+
+      '<div class="stat"><span class="k">KOBAN</span><b>'+(kobanFound?"FOUND":"LOST")+'</b></div>'+
     '</div>'+
-    '<p class="small">街灯の下は捕捉される。物陰でやり過ごしてから動け。</p>'+
-    '<p class="cta bad blink">▶ TAP / ENTER — もう一度 走る</p>';
+    '<p class="cta bad blink">TAP</p>';
   el.overlay.style.display="flex";
 }
 function clearGame(){
   if(state!==ST.PLAY) return;
-  state=ST.CLEAR; jingle();
+  state=ST.CLEAR; bgmStop(); jingle();
   if(document.exitPointerLock) document.exitPointerLock();
   tMove={x:0,y:0}; tDash=false; lookDir=0;
   const t=elapsed, isBest=saveBest(t), b=bestTime();
-  let rank="C", note="生きて帰れた。今夜は、それで充分だ。";
-  if(t<75){ rank="S"; note="鬼はお前を見失ったまま朝を迎える。"; }
-  else if(t<120){ rank="A"; note="足音ひとつ分の差だった。"; }
-  else if(t<190){ rank="B"; note="何度か、すぐ後ろで息の音がした。"; }
+  let rank="C";
+  if(t<180) rank="S";
+  else if(t<280) rank="A";
+  else if(t<400) rank="B";
+  el.overlay.classList.add("clear");
+  el.overlay.classList.remove("title","dead");
   el.panel.innerHTML=
-    '<div class="tag good">SAFE HOUSE REACHED ∕ 交番と接続確立</div>'+
+    '<div class="stamp good">SAFE?</div>'+
     '<h2 class="glitch good" data-t="逃げ切った">逃げ切った</h2>'+
-    '<div class="sub-en">Y O U   S U R V I V E D   T O N I G H T</div>'+
+    '<div class="sub-en">TONIGHT ONLY</div>'+
     '<div class="statrow">'+
-      '<div class="stat"><span class="k">CLEAR TIME</span><b>'+fmt(t)+'</b></div>'+
+      '<div class="stat"><span class="k">STAGE</span><b>5 / 5</b></div>'+
+      '<div class="stat"><span class="k">TIME</span><b>'+fmt(t)+'</b></div>'+
       '<div class="stat"><span class="k">RANK</span><b class="rank">'+rank+'</b></div>'+
-      '<div class="stat"><span class="k">BEST</span><b>'+fmt(b===null?t:b)+(isBest?" ★":"")+'</b></div>'+
+      '<div class="stat"><span class="k">BEST</span><b>'+fmt(b===null?t:b)+(isBest?" *":"")+'</b></div>'+
     '</div>'+
-    '<p>赤色灯の下で、鬼は闇に溶けた。<br><span class="small">'+note+'</span></p>'+
-    '<p class="small" style="color:#ff8fb0">――ただし、あしたも同じ道を通る。</p>'+
-    '<p class="cta good blink">▶ TAP / ENTER — もう一晩</p>';
+    '<p class="cold-line">あしたも同じ道を通る</p>'+
+    '<p class="cta blink">TAP</p>';
   el.overlay.style.display="flex";
 }
 function fmt(t){ const m=Math.floor(t/60), s=Math.floor(t%60); return m+":"+(s<10?"0":"")+s; }
@@ -1282,8 +1485,8 @@ function fmt(t){ const m=Math.floor(t/60), s=Math.floor(t%60); return m+":"+(s<1
 (function initTitle(){
   setMute(muted);
   const b=bestTime(), line=document.getElementById("bestLine");
-  if(b!==null && line){
-    line.innerHTML='最速帰宅記録 <b class="goal">'+fmt(b)+'</b>　／　鬼は音と視線で追ってくる。';
+  if(line){
+    line.textContent = (b!==null) ? ("BEST  "+fmt(b)) : "";
   }
 })();
 
@@ -1298,6 +1501,7 @@ function loop(now){
 }
 function update(dt){
   elapsed+=dt;
+  if(stageLock>0) stageLock-=dt;
 
   /* 入力ベクトル */
   let ix=0,iz=0;
@@ -1370,19 +1574,22 @@ function update(dt){
     nearest=Math.min(nearest,d);
     if(o.state==="chase") chasing=true;
   }
-  /* 増援 */
-  if(elapsed>75 && onis.length<2) { spawnOni(0x2f4fa8,0x9fe6ff,45); flash("青鬼が現れた！"); }
+  /* 増援はステージ進行で出す。時間経過の青鬼スポーンはしない */
 
   /* 交番 */
   const kd=Math.hypot(KOBAN.x-player.x,KOBAN.z-player.z);
   if(!kobanFound && kd<26 && !losBlocked(player.x,player.z,KOBAN.x,KOBAN.z)){
-    kobanFound=true; flash("交番を見つけた！"); beep(880,0.14,"square",0.07);
+    kobanFound=true; flash("交番を見つけた"); beep(880,0.14,"square",0.07);
   }
-  if(kd<4.2){ clearGame(); return; }
-  if(!hintShown && elapsed>70){ hintShown=true; flash("交番の赤い光をさがせ（空を見ろ）"); }
+  if(kd<4.2 && stageLock<=0){
+    if(stage>=STAGES){ clearGame(); return; }
+    nextStage();
+  }
+  if(!hintShown && elapsed>70){ hintShown=true; flash("赤い光をさがせ"); }
 
   /* HUD */
   el.time.textContent=fmt(elapsed);
+  if(el.stageLab) el.stageLab.textContent=stage+" / "+STAGES;
   el.sta.style.width=(player.sta*100)+"%";
   el.pres.style.width=clamp((1-nearest/45)*100,0,100)+"%";
   el.breathRow.style.display=player.hidden?"block":"none";
@@ -1392,6 +1599,7 @@ function update(dt){
   else { el.state.className="safe"; el.state.textContent="● 安全"; el.sub.textContent=kobanFound?"交番へ急げ":"交番をさがせ"; }
   if(player.hidden){ el.sub.textContent="かくれ中（Spaceで出る）"; }
   else if(!chasing && nearHideSpot()){ el.sub.textContent="Space：ここに隠れられる"; }
+  syncBgmNear(nearest);
 
   if(flashT>0){ flashT-=dt; if(flashT<=0) el.hint.style.display="none"; }
 
@@ -1431,6 +1639,17 @@ playerMesh.position.set(player.x,0,player.z);
 camera.position.set(player.x,4.6,player.z+7);
 camera.lookAt(player.x,1.4,player.z);
 drawMap();
+window.__kitaku={
+  snap(){ return {stage:stage, oni:onis.length, colors:onis.map(o=>o.color), kd:Math.hypot(KOBAN.x-player.x,KOBAN.z-player.z), state:state, bgmNear:bgmNear, bgmVol:bgmPlayVol(), oniScale:onis[0]?onis[0].mesh.scale.x:null, oniCatch:ONI_CATCH, oniRadius:ONI_RADIUS}; },
+  goNext(){ nextStage(); },
+  banner(){ const b=document.getElementById("stageMark"), n=document.getElementById("stageMarkN"); return {show:!!(b&&b.classList.contains("show")), n:n?n.textContent:"", display:b?getComputedStyle(b).display:""}; },
+  placeOni(dx,dz){
+    const o=onis[0]; if(!o) return null;
+    o.x=player.x+dx; o.z=player.z+dz;
+    if(o.mesh) o.mesh.position.set(o.x,0,o.z);
+    return Math.hypot(dx,dz);
+  }
+};
 requestAnimationFrame(loop);
 })();
 </script>
